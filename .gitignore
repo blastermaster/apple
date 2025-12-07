@@ -53,3 +53,5 @@ phpunit.phar
 /hosts/*
 !/hosts/template
 !/hosts/template_backend
+
+docker-compose.override.yml
