@@ -28,6 +28,8 @@ services:
             - .:/var/www
         expose:
             - 9000
+        environment:
+            - TZ=Europe/Moscow
     db:
         image: mysql:latest
         command: --max_allowed_packet=325058560

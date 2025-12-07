@@ -1,6 +1,7 @@
 <?php
 
 use backend\models\Apple;
+use Yii;
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
@@ -52,7 +53,30 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'attribute' => 'fell_at',
-                'format' => 'datetime',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if ($model->fell_at === null) {
+                        return '';
+                    }
+                    
+                    $dateTime = Yii::$app->formatter->asDatetime($model->fell_at);
+                    $result = $dateTime;
+                    
+                    if ($model->status === Apple::STATUS_FELL && !$model->isRotten()) {
+                        $hoursOnGround = (time() - $model->fell_at) / 3600;
+                        $remainingHours = Apple::ROTTEN_HOURS - $hoursOnGround;
+                        
+                        if ($remainingHours > 0) {
+                            $hours = floor($remainingHours);
+                            $minutes = floor(($remainingHours - $hours) * 60);
+                            $result .= '<br><small class="text-muted">(до гниения осталось ' . $hours . 'ч ' . $minutes . 'м)</small>';
+                        } else {
+                            $result .= '<br><small class="text-danger">(должно было сгнить)</small>';
+                        }
+                    }
+                    
+                    return $result;
+                },
                 'filter' => false,
             ],
             [
@@ -90,7 +114,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     if ($model->status == Apple::STATUS_FELL) {
                         if (!$model->isRotten()) {
                             $html .= Html::textInput('percent', '', [
-                                'class' => 'form-control percent-input form-control-sm d-inline-block',
+                                'class' => 'form-control m-1 percent-input form-control-xs d-inline-block',
                                 'type' => 'number', 
                                 'min' => 1,
                                 'max' => 100,
@@ -100,14 +124,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'data-eaten' => $model->eaten_percent,
                             ]);
                             $html .= Html::button('Съесть', [
-                                'class' => 'btn btn-success btn-sm apple-eat',
-                                'data-id' => $model->id,
-                                'style' => 'margin-left: 5px;',
+                                'class' => 'btn btn-success m-1 btn-sm apple-eat',
+                                'data-id' => $model->id
                             ]);
                             $html .= Html::button('Испортиться', [
-                                'class' => 'btn btn-warning btn-sm apple-rotten',
-                                'data-id' => $model->id,
-                                'style' => 'margin-left: 5px;',
+                                'class' => 'btn btn-warning m-1 btn-sm apple-rotten',
+                                'data-id' => $model->id
                             ]);
                         }
                     }

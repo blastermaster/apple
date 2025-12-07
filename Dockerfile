@@ -4,6 +4,7 @@ FROM php:8.4-fpm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
+    tzdata \
     libicu-dev \
     libfreetype6-dev \
     libjpeg62-turbo-dev \
@@ -23,7 +24,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
-RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/security.ini
+RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/security.ini && \
+    echo "date.timezone = Europe/Moscow" >> /usr/local/etc/php/conf.d/timezone.ini
 
 WORKDIR /var/www
 

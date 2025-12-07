@@ -54,6 +54,8 @@ class AppleController extends Controller
      */
     public function actionIndex()
     {
+        Apple::checkRottenApples();
+
         $searchModel = new AppleSearch();
         $dataProvider = $searchModel->search($this->request->queryParams);
 
@@ -80,7 +82,11 @@ class AppleController extends Controller
                 $apple->eaten_percent = 0;
 
                 if ($apple->status === Apple::STATUS_FELL) {
-                    $apple->fell_at = time() - rand(0, 4) * 3600;
+                    $apple->fell_at = time() - rand(0, 10) * 3600;
+                    $hoursOnGround = (time() - $apple->fell_at) / 3600;
+                    if ($hoursOnGround >= Apple::ROTTEN_HOURS) {
+                        $apple->status = Apple::STATUS_ROTTEN;
+                    }
                 }
 
                 if ($apple->save(false)) {

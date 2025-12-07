@@ -161,7 +161,7 @@ class Apple extends ActiveRecord
         return $this->save(false);
     }
 
-    private function checkAndMarkRotten()
+    public function checkAndMarkRotten()
     {
         if ($this->status === self::STATUS_FELL && $this->fell_at !== null) {
             $hoursOnGround = (time() - $this->fell_at) / 3600;
@@ -173,6 +173,23 @@ class Apple extends ActiveRecord
         }
 
         return false;
+    }
+
+    public static function checkRottenApples()
+    {
+        $apples = self::find()
+            ->where(['status' => self::STATUS_FELL])
+            ->andWhere(['is not', 'fell_at', null])
+            ->all();
+
+        $count = 0;
+        foreach ($apples as $apple) {
+            if ($apple->checkAndMarkRotten()) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     public static function generateRandomColor()
