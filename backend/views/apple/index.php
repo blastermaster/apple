@@ -90,8 +90,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     if ($model->status == Apple::STATUS_FELL) {
                         if (!$model->isRotten()) {
                             $html .= Html::textInput('percent', '', [
-                                'class' => 'form-control form-control-sm d-inline-block',
-                                'style' => 'width: 80px; margin-left: 5px;',
+                                'class' => 'form-control percent-input form-control-sm d-inline-block',
+                                'type' => 'number', 
+                                'min' => 1,
+                                'max' => 100,
+                                'step' => 1,
                                 'placeholder' => '%',
                                 'data-id' => $model->id,
                                 'data-eaten' => $model->eaten_percent,
