@@ -1,5 +1,7 @@
 # Приложение Apple
 
+![App](app.png)
+
 ## Установка и запуск
 
 1. Добавьте в `/etc/hosts` домены `apple.loc` и `backend.apple.loc`
