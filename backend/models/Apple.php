@@ -147,6 +147,20 @@ class Apple extends ActiveRecord
         return $this->checkAndMarkRotten();
     }
 
+    public function makeRotten()
+    {
+        if ($this->status === self::STATUS_ON_TREE) {
+            throw new Exception('Яблоко на дереве не может испортиться');
+        }
+
+        if ($this->status === self::STATUS_ROTTEN) {
+            throw new Exception('Яблоко уже гнилое');
+        }
+
+        $this->status = self::STATUS_ROTTEN;
+        return $this->save(false);
+    }
+
     private function checkAndMarkRotten()
     {
         if ($this->status === self::STATUS_FELL && $this->fell_at !== null) {

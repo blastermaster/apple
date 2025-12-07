@@ -40,6 +40,7 @@ class AppleController extends Controller
                         'delete' => ['POST'],
                         'fall' => ['POST'],
                         'eat' => ['POST'],
+                        'rotten' => ['POST'],
                     ],
                 ],
             ]
@@ -164,6 +165,39 @@ class AppleController extends Controller
                 'eaten_percent' => $apple->eaten_percent,
                 'size' => $apple->size,
                 'deleted' => $apple->isNewRecord,
+            ];
+            return $response;
+        } catch (Exception $e) {
+            $response->data = [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+            return $response;
+        }
+    }
+
+    public function actionRotten()
+    {
+        $response = Yii::$app->response;
+        $response->format = Response::FORMAT_JSON;
+        
+        $id = $this->request->post('id');
+        if (!$id) {
+            $response->data = [
+                'success' => false,
+                'message' => 'Отсутствует параметр id',
+            ];
+            return $response;
+        }
+        
+        try {
+            $apple = $this->findModel($id);
+            $apple->makeRotten();
+            
+            $response->data = [
+                'success' => true,
+                'message' => 'Яблоко испортилось',
+                'status' => $apple->status,
             ];
             return $response;
         } catch (Exception $e) {

@@ -29,8 +29,22 @@ $this->params['breadcrumbs'][] = $this->title;
             'class' => LinkPager::class,
         ],
         'columns' => [
-            'id',
-            'color',
+            [
+                'attribute' => 'id',
+            ],
+            [
+                'attribute' => 'color',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $colors = [
+                        'green' => ['name' => 'Зеленый', 'class' => 'success'],
+                        'red' => ['name' => 'Красный', 'class' => 'danger'],
+                        'yellow' => ['name' => 'Желтый', 'class' => 'warning'],
+                    ];
+                    $colorData = $colors[$model->color] ?? ['name' => $model->color, 'class' => 'secondary'];
+                    return Html::tag('span', $colorData['name'], ['class' => 'badge bg-' . $colorData['class']]);
+                },
+            ],
             [
                 'attribute' => 'appeared_at',
                 'format' => 'datetime',
@@ -80,9 +94,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'style' => 'width: 80px; margin-left: 5px;',
                                 'placeholder' => '%',
                                 'data-id' => $model->id,
+                                'data-eaten' => $model->eaten_percent,
                             ]);
                             $html .= Html::button('Съесть', [
                                 'class' => 'btn btn-success btn-sm apple-eat',
+                                'data-id' => $model->id,
+                                'style' => 'margin-left: 5px;',
+                            ]);
+                            $html .= Html::button('Испортиться', [
+                                'class' => 'btn btn-warning btn-sm apple-rotten',
                                 'data-id' => $model->id,
                                 'style' => 'margin-left: 5px;',
                             ]);
@@ -102,6 +122,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $fallUrl = Url::to(['apple/fall']);
 $eatUrl = Url::to(['apple/eat']);
+$rottenUrl = Url::to(['apple/rotten']);
 $csrfToken = Yii::$app->request->csrfToken;
 
 $js = <<<JS
@@ -133,14 +154,20 @@ $(document).on('click', '.apple-fall', function() {
     });
 });
 
-$(document).on('click', '.apple-eat', function() {
-    var btn = $(this);
-    var id = btn.data('id');
+function eatApple(id) {
+    var btn = $('.apple-eat[data-id="' + id + '"]');
     var percentInput = $('input[data-id="' + id + '"]');
     var percent = parseFloat(percentInput.val());
+    var eatenPercent = parseFloat(percentInput.data('eaten')) || 0;
+    var remaining = 100 - eatenPercent;
     
     if (!percent || percent <= 0 || percent > 100) {
         alert('Введите корректный процент от 1 до 100');
+        return;
+    }
+    
+    if (percent > remaining) {
+        alert('Нельзя съесть больше, чем осталось. Осталось: ' + remaining.toFixed(2) + '%');
         return;
     }
     
@@ -159,6 +186,46 @@ $(document).on('click', '.apple-eat', function() {
                 if (response.deleted) {
                     alert('Яблоко полностью съедено и удалено');
                 }
+                $.pjax.reload({container: '#apple-grid-pjax'});
+            } else {
+                alert(response.message);
+                btn.prop('disabled', false);
+            }
+        },
+        error: function() {
+            alert('Ошибка при выполнении запроса');
+            btn.prop('disabled', false);
+        }
+    });
+}
+
+$(document).on('click', '.apple-eat', function() {
+    var id = $(this).data('id');
+    eatApple(id);
+});
+
+$(document).on('keypress', 'input[data-id]', function(e) {
+    if (e.which === 13) {
+        var id = $(this).data('id');
+        eatApple(id);
+    }
+});
+
+$(document).on('click', '.apple-rotten', function() {
+    var btn = $(this);
+    var id = btn.data('id');
+    
+    btn.prop('disabled', true);
+    
+    $.ajax({
+        url: '{$rottenUrl}',
+        method: 'POST',
+        data: {
+            id: id,
+            _csrf: '{$csrfToken}'
+        },
+        success: function(response) {
+            if (response.success) {
                 $.pjax.reload({container: '#apple-grid-pjax'});
             } else {
                 alert(response.message);
